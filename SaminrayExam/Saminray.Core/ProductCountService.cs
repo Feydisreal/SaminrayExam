@@ -16,28 +16,49 @@ namespace SaminrayExam.Saminray.Core
 
         public void ReduceCount()
         {
+            if (!context.Products.Any())
+            {
+                Console.WriteLine("There is no Product in our Database");
+                AppService.ReturnToMainMenu();
+            }
             Console.WriteLine("Please Select Product by number:");
-
+            
             var products = context.Products.ToList();
             foreach (var item in products)
             {
                 Console.WriteLine(item.ProductId + ":" + item.Name);
             }
-            var response = GetInput();
-            var selected = context.Products
+            int response;
+            if (int.TryParse(GetInput() , out response))
+            {
+                var selected = context.Products
                 .Include(x => x.ProductGroup)
-                .FirstOrDefault(x => x.ProductId == int.Parse(response));
+                .FirstOrDefault(x => x.ProductId == response);
 
-            Console.WriteLine("How Many Do you Want To Reduce , Current = {0}", selected.Count);
-            selected.Count -= int.Parse(GetInput());
-            context.Update(selected);
-            context.SaveChanges();
+                Console.WriteLine("How Many Do you Want To Reduce , Current = {0}", selected.Count);
+                selected.Count -= int.Parse(GetInput());
+                context.Update(selected);
+                context.SaveChanges();
 
-            Console.WriteLine(selected.Name + " new Count is :" + selected.Count);
-            AppService.ReturnToMainMenu();
+                Console.WriteLine(selected.Name + " new Count is :" + selected.Count);
+                AppService.ReturnToMainMenu();
+            }
+            else
+            {
+                Console.WriteLine("Please Write a Correct Number");
+                ReduceCount();
+            }
+            
+                
+            
         }
         public void AddCount()
         {
+            if (!context.Products.Any())
+            {
+                Console.WriteLine("There is no Product in our Database");
+                AppService.ReturnToMainMenu();
+            }
             Console.WriteLine("Please Select Product by number:");
 
             var products = context.Products.ToList();
@@ -45,18 +66,28 @@ namespace SaminrayExam.Saminray.Core
             {
                 Console.WriteLine(item.ProductId + ":" + item.Name);
             }
-            var response = GetInput();
-            var selected = context.Products
+            int response;
+            if (int.TryParse(GetInput(), out response))
+            {
+                var selected = context.Products
                 .Include(x => x.ProductGroup)
-                .FirstOrDefault(x => x.ProductId == int.Parse(response));
+                .FirstOrDefault(x => x.ProductId == response);
 
-            Console.WriteLine("How Many Do you Want To Add , Current = {0}",selected.Count);
-            selected.Count += int.Parse(GetInput());
-            context.Update(selected);
-            context.SaveChanges();
+                Console.WriteLine("How Many Do you Want To Add , Current = {0}", selected.Count);
+                selected.Count += int.Parse(GetInput());
+                context.Update(selected);
+                context.SaveChanges();
 
-            Console.WriteLine(selected.Name + " new Count is :" + selected.Count);
-            AppService.ReturnToMainMenu();
+                Console.WriteLine(selected.Name + " new Count is :" + selected.Count);
+                AppService.ReturnToMainMenu();
+            }
+            else
+            {
+                Console.WriteLine("Please Write a Correct Number");
+                AddCount();
+            }
+               
+            
         }
 
         public string GetInput()

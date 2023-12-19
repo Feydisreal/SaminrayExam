@@ -27,37 +27,11 @@ namespace SaminrayExam.Saminray.Core
             Console.WriteLine("3.Search for a Product");
             Console.WriteLine("4.Edit a Product");
             Console.WriteLine("5.Delete a Product");
-            Console.WriteLine("6.Return");
-            var answer = int.Parse(Console.ReadLine());
+            Console.WriteLine("6.Return"); 
+            int answer;
+            int.TryParse(Console.ReadLine(), out answer);
             Console.Clear();
-            switch (answer)
-            {
-                case 1:
-                    AddProduct();
-                    break;
-
-
-                case 2:
-                    ProductList();
-                    break;
-
-                case 3:
-                    SearchForAProduct();
-                    break;
-
-                case 4:
-                    UpdateProduct();
-                    break;
-
-                case 5:
-                    RemoveProduct();
-                    break;
-
-                case 6:
-                    AppService.Start();
-                    break;
-
-            }
+            CheckUserInputForProduct(answer);
 
         }
 
@@ -128,34 +102,65 @@ namespace SaminrayExam.Saminray.Core
         }
 
         public void RemoveProduct() {
-
+            if (!context.Products.Any())
+            {
+                Console.WriteLine("There is no Product in our Database");
+                AppService.ReturnToMainMenu();
+            }
             Console.WriteLine("Please Select Product by number:");
             var products = context.Products.ToList();
             foreach (var item in products)
             {
                 Console.WriteLine(item.ProductId + ":" + item.Name);
             }
-            var response = AppService.GetInput();
-            var selected = context.Products.SingleOrDefault(x => x.ProductId == int.Parse(response));
-            Console.WriteLine("Are You Sure About Deleting {0} ? Y/N",selected.Name);
-            var res = AppService.GetInput();
-            if (res.ToLower() == "y")
+            int response;
+
+            if (int.TryParse(AppService.GetInput(),out response))
             {
-                context.Remove(selected);
+                var selected = context.Products.SingleOrDefault(x => x.ProductId == response);
+                Console.WriteLine("Are You Sure About Deleting {0} ? Y/N", selected.Name);
+                var res = AppService.GetInput();
+                CheckInputAndDelete(res, selected) ;
+            }
+            else
+            {
+                Console.WriteLine("Please Write a Correct number!");
+                RemoveProduct();
+            }
+            
+           
+        }
+        public void CheckInputAndDelete(string yesAndNo, Product product)
+        {
+            if (yesAndNo.ToLower() == "y")
+            {
+                context.Remove(product);
                 context.SaveChanges();
-                Console.WriteLine(selected.Name + " Deleted");
+                Console.WriteLine(product.Name + " Deleted");
+                AppService.ReturnToMainMenu();
+            }
+            else if (yesAndNo.ToLower() == "n")
+            {
                 AppService.ReturnToMainMenu();
             }
             else
             {
-                AppService.ReturnToMainMenu();
+                Console.WriteLine("Please answer With Y/N");
+
+                Console.WriteLine("Are You Sure About Deleting {0} ?", product.Name);
+                var newResponse = AppService.GetInput();
+                CheckInputAndDelete(newResponse,product);
             }
+            
         }
 
 
-
         public void UpdateProduct() {
-            
+            if (!context.Products.Any())
+            {
+                Console.WriteLine("There is no Product in our Database");
+                AppService.ReturnToMainMenu();
+            }
             Console.WriteLine("Please Select Product by number:");
 
            var products = context.Products.ToList();
@@ -163,17 +168,33 @@ namespace SaminrayExam.Saminray.Core
             {
                 Console.WriteLine(item.ProductId + ":" + item.Name);
             }
-            var response = AppService.GetInput();
-            var selected = context.Products
-                .Include(x => x.ProductGroup)
-                .FirstOrDefault(x => x.ProductId == int.Parse(response));
+            int response;
+            
+            
+            if (int.TryParse(AppService.GetInput(), out response))
+            {
+                ApplyUpdateById(response);
+            }
+            else
+            {
+                Console.WriteLine("Please Use Correct Number");
+                UpdateProduct();
+            }
+           
 
+            
+        }
+        public void ApplyUpdateById(int id)
+        {
+            var selected = context.Products
+              .Include(x => x.ProductGroup)
+              .FirstOrDefault(x => x.ProductId == id);
             Console.WriteLine("Please Enter New Product Name (Previous {0}):", selected.Name);
             selected.Name = Console.ReadLine();
             Console.Clear();
 
             Console.WriteLine("Please Enter New Product Price (Previous {0}):", selected.Price);
-            selected.Price =float.Parse(Console.ReadLine());
+            selected.Price = float.Parse(Console.ReadLine());
             Console.Clear();
 
             Console.WriteLine("Please Enter New Product Count (Previous {0}):", selected.Count);
@@ -202,7 +223,6 @@ namespace SaminrayExam.Saminray.Core
             Console.WriteLine(selected.Name + " Edited");
             AppService.ReturnToMainMenu();
         }
-
 
         public void ProductList()
         {
@@ -250,7 +270,39 @@ namespace SaminrayExam.Saminray.Core
             Console.WriteLine();
             AppService.ReturnToMainMenu();
         }
-     
+     public void CheckUserInputForProduct(int answer)
+        {
+            switch (answer)
+            {
+                case 1:
+                    AddProduct();
+                    break;
+                case 2:
+                    ProductList();
+                    break;
+
+                case 3:
+                    SearchForAProduct();
+                    break;
+
+                case 4:
+                    UpdateProduct();
+                    break;
+
+                case 5:
+                    RemoveProduct();
+                    break;
+
+                case 6:
+                    AppService.Start();
+                    break;
+                default:
+                    Console.WriteLine("Please Write a correct number");
+                    ProductMenu();
+                    break;
+
+            }
+        }
       
     }
 }

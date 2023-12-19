@@ -20,37 +20,20 @@ namespace SaminrayExam.Saminray.Core
             Console.WriteLine("3.Edit a Product Group");
             Console.WriteLine("4.Delete a Product Group");
             Console.WriteLine("6.Return");
-            var answer = int.Parse(Console.ReadLine());
+            int answer;
+            int.TryParse(Console.ReadLine(),out answer);
             Console.Clear();
-            switch (answer)
-            {
-                case 1:
-                    AddNewGroup();
-                    break;
-
-
-                case 2:
-                    GetProductGroupList();
-                    break;
-
-                case 3:
-                    EditProductGroup();
-                    break;
-
-                case 4:
-                    DeleteProductGroup();
-                    break;
-
-                case 5:
-                    AppService.Start();
-                    break;
-
-            }
+            CheckUserInputForProductGroup(answer);
 
         }
 
         public void DeleteProductGroup()
         {
+            if (!context.ProductGroups.Any())
+            {
+                Console.WriteLine("There is no Product Groups in our Database");
+                AppService.ReturnToMainMenu();
+            }
             Console.WriteLine("Please Select Group by number:");
 
             var products = context.ProductGroups.ToList();
@@ -58,27 +41,36 @@ namespace SaminrayExam.Saminray.Core
             {
                 Console.WriteLine(item.ProductGroupId + ":" + item.Name);
             }
-            var response = AppService.GetInput();
-            var selected = context.ProductGroups
-                .FirstOrDefault(x => x.ProductGroupId == int.Parse(response));
-            Console.WriteLine("Are You Sure About Deleting {0} ? Y/N",selected.Name);
-            var res = AppService.GetInput();
-            if (res.ToLower() == "y")
+            int response;
+            if (int.TryParse(AppService.GetInput(), out response))
             {
-                context.Remove(selected);
-                context.SaveChanges();
-                Console.WriteLine();
-                AppService.ReturnToMainMenu();
+                var selected = context.ProductGroups
+               .FirstOrDefault(x => x.ProductGroupId == response);
+                int childs = 0;
+                if (context.Products.Any(x=> x.ProductGroupRef == selected.ProductGroupId))
+                {
+                    childs = context.Products.Where(x => x.ProductGroupRef == selected.ProductGroupId).Count();
+                    Console.WriteLine("You are Going To also delete {0} Prouduct with this group", childs);
+                }
+                Console.WriteLine("Are You Sure About Deleting {0} ? Y/N", selected.Name);
+                var res = AppService.GetInput();
+                CheckInputAndDelete(res, selected, childs);
             }
             else
             {
-                AppService.ReturnToMainMenu();
+                Console.WriteLine("please write a Correct number");
+                DeleteProductGroup();
             }
-
+           
             AppService.ReturnToMainMenu();
         }
         public void EditProductGroup()
         {
+            if (!context.ProductGroups.Any())
+            {
+                Console.WriteLine("There is no Product Groups in our Database");
+                AppService.ReturnToMainMenu();
+            }
             Console.WriteLine("Please Select Group by number:");
 
             var products = context.ProductGroups.ToList();
@@ -119,10 +111,65 @@ namespace SaminrayExam.Saminray.Core
             };
             context.Add(newGroup);
             context.SaveChanges();
-            Console.WriteLine(newGroup + " Added to Data base");
+            Console.WriteLine(newGroup.Name + " Added to Data base");
             AppService.ReturnToMainMenu();
         }
+        public void CheckInputAndDelete(string yesAndNo, ProductGroup group, int childNumbers)
+        {
+            if (yesAndNo.ToLower() == "y")
+            {
+                context.Remove(group);
+                context.SaveChanges();
+                Console.WriteLine(group.Name + " Deleted");
+                AppService.ReturnToMainMenu();
+            }
+            else if (yesAndNo.ToLower() == "n")
+            {
+                AppService.ReturnToMainMenu();
+            }
+            else
+            {
+                Console.WriteLine("Please answer With Y/N");
+                if (childNumbers != 0)
+                {
+                    Console.WriteLine("You are Going To also delete {0} Prouduct with this group", childNumbers);
+                }
+                Console.WriteLine("Are You Sure About Deleting {0} ?", group.Name);
+                var newResponse = AppService.GetInput();
+                CheckInputAndDelete(newResponse, group , childNumbers);
+            }
 
+        }
+        public void CheckUserInputForProductGroup(int answer)
+        {
+               switch (answer)
+            {
+                case 1:
+                    AddNewGroup();
+                    break;
+
+
+                case 2:
+                    GetProductGroupList();
+                    break;
+
+                case 3:
+                    EditProductGroup();
+                    break;
+
+                case 4:
+                    DeleteProductGroup();
+                    break;
+
+                case 5:
+                    AppService.Start();
+                    break;
+                default:
+                    Console.WriteLine("Please Write a Correct Number");
+                    ProductGroupMenu();
+                    break;
+            }
+        }
       
     }
 }
